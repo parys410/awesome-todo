@@ -1,11 +1,22 @@
 <template>
   <q-page>
     <q-select
-      :optCurrions="optCurr"
+      :options="optCurr"
       label="Currency"
       class="currency"
       v-model="optCurrSelected"
-    />
+      use-input
+      input-debounce="0"
+      @filter="filterCurr"
+    >
+      <template v-slot:no-option>
+        <q-item>
+          <q-item-section class="text-grey">
+            No results
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
     <q-input label="Message" class="message" v-model="message">
       <template v-slot:append>
         <q-btn round dense flat icon="clear" @click="clearMessage" />
@@ -17,6 +28,9 @@
 
 <script>
 import ky from "ky";
+
+let options = [];
+
 export default {
   data() {
     return {
@@ -42,19 +56,35 @@ export default {
         })
         .json();
       this.curr = parsed.response.tWaehrung["t-waehrung"];
-      let test = [];
+      let data = [];
       this.curr.forEach(function(item, index) {
-        test.push({
+        data.push({
           label: item.bezeich,
           value: item.waehrungsnr
         });
       });
-      this.optCurr = test;
+      this.optCurr = data;
+      options = data;
     })();
   },
   methods: {
     clearMessage() {
       this.message = "";
+    },
+    filterCurr(val, update) {
+      if (val === "") {
+        update(() => {
+          this.optCurr = options;
+        });
+        return;
+      }
+
+      update(() => {
+        const searchVal = val.toLowerCase();
+        this.optCurr = options.filter((item, index) => {
+          return item.label.toLowerCase().includes(searchVal);
+        });
+      });
     }
   }
 };
