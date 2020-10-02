@@ -30,6 +30,7 @@
 import ky from "ky";
 
 let options = [];
+const tempParam = "vylzwFFWQi9rPgLGo2CwQ8xM6R9zEqcwENAsdod9KGI=";
 
 export default {
   data() {
@@ -43,28 +44,40 @@ export default {
   created() {
     (async () => {
       const parsed = await ky
-        .post("http://ws1.e1-vhp.com/VHPWebBased/rest/Common/readCurrency", {
-          json: {
-            request: {
-              inputUsername: "sindata",
-              inputUserkey: "6D83EFC6F6CA694FFC35FAA7D70AD308FB74A6CD",
-              caseType: "8",
-              currencyNo: "?",
-              currBez: ""
+        .post(
+          "http://54.251.169.160:8080/logserver/rest/loginServer/retrieveReservation",
+          {
+            json: {
+              request: {
+                encryptedText: tempParam
+                  .replace(/%2F/g, "/")
+                  .replace(/%20/g, "+")
+              }
             }
           }
-        })
+        )
         .json();
-      this.curr = parsed.response.tWaehrung["t-waehrung"];
-      let data = [];
-      this.curr.forEach(function(item, index) {
-        data.push({
-          label: item.bezeich,
-          value: item.waehrungsnr
+      // this.curr = parsed.response.tWaehrung["t-waehrung"];
+      // let data = [];
+      // this.curr.forEach(function(item, index) {
+      //   data.push({
+      //     label: item.bezeich,
+      //     value: item.waehrungsnr
+      //   });
+      // });
+      // this.optCurr = data;
+      //options = data;
+      let data = parsed.response.pciSetup["pci-setup"];
+      let newData = data.filter((item, index) => {
+        return item.number1 === 9 && item.number2 === 2;
+      });
+      newData.forEach((item, index) => {
+        this.optCurr.push({
+          label: item.setupvalue,
+          value: item.descr
         });
       });
-      this.optCurr = data;
-      options = data;
+      options = this.optCurr;
     })();
   },
   methods: {
